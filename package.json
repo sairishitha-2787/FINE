@@ -1,0 +1,72 @@
+{
+  "name": "fine-finance-intelligent-ecosystem",
+  "version": "1.0.0",
+  "description": "A comprehensive full-stack financial management application with AI-powered emotional insights",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\" \"npm run dev:ml\"",
+    "dev:backend": "cd server && npm run dev",
+    "dev:frontend": "cd client && npm start",
+    "dev:ml": "cd ml_service && uvicorn main:app --reload --host 0.0.0.0 --port 8000",
+    "build": "npm run build:frontend && npm run build:backend",
+    "build:frontend": "cd client && npm run build",
+    "build:backend": "cd server && npm run build",
+    "start": "docker-compose up -d",
+    "stop": "docker-compose down",
+    "restart": "docker-compose restart",
+    "logs": "docker-compose logs -f",
+    "clean": "docker-compose down -v && docker system prune -f",
+    "setup": "npm run setup:backend && npm run setup:frontend && npm run setup:ml",
+    "setup:backend": "cd server && npm install",
+    "setup:frontend": "cd client && npm install",
+    "setup:ml": "cd ml_service && pip install -r requirements.txt",
+    "test": "npm run test:backend && npm run test:frontend && npm run test:ml",
+    "test:backend": "cd server && npm test",
+    "test:frontend": "cd client && npm test",
+    "test:ml": "cd ml_service && pytest",
+    "lint": "npm run lint:backend && npm run lint:frontend",
+    "lint:backend": "cd server && npm run lint",
+    "lint:frontend": "cd client && npm run lint",
+    "format": "npm run format:backend && npm run format:frontend",
+    "format:backend": "cd server && npm run format",
+    "format:frontend": "cd client && npm run format",
+    "db:setup": "docker-compose up -d mysql mongodb redis",
+    "db:migrate": "cd server && npm run migrate",
+    "db:seed": "cd server && npm run seed",
+    "health": "curl -f http://localhost:3000/health && curl -f http://localhost:5000/health && curl -f http://localhost:8000/health"
+  },
+  "keywords": [
+    "finance",
+    "ai",
+    "machine-learning",
+    "react",
+    "nodejs",
+    "python",
+    "fastapi",
+    "mysql",
+    "mongodb",
+    "redis",
+    "docker",
+    "emotional-intelligence",
+    "personal-finance",
+    "budgeting",
+    "insights"
+  ],
+  "author": "FINE Development Team",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/fine-finance-intelligent-ecosystem.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-username/fine-finance-intelligent-ecosystem/issues"
+  },
+  "homepage": "https://github.com/your-username/fine-finance-intelligent-ecosystem#readme"
+}
