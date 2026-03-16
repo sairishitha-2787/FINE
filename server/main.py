@@ -28,3 +28,34 @@ def root():
 @app.get("/health")
 def health():
     return {"status": "healthy", "supabase": "connected"}
+
+from pydantic import BaseModel
+
+class SignupRequest(BaseModel):
+    name: str
+    email: str
+    password: str
+
+@app.post("/auth/signup")
+async def signup(request: SignupRequest):
+    try:
+        # Step 1: Create auth user in Supabase
+        auth_response = supabase.auth.sign_up({
+            "email": request.email,
+            "password": request.password
+        })
+        
+        user_id = auth_response.user.id
+        
+        # Step 2: Insert into our users table
+        supabase.table("users").insert({
+            "id": user_id,
+            "name": request.name,
+            "email": request.email,
+            "onboarding_complete": False
+        }).execute()
+        
+        return {"message": "Account created", "user_id": user_id}
+    
+    except Exception as e:
+        return {"error": str(e)}
