@@ -1,7 +1,9 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from supabase import create_client, Client
 from dotenv import load_dotenv
+from pydantic import BaseModel
 import os
 
 load_dotenv(os.path.join(os.path.dirname(__file__), '.env'))
@@ -28,8 +30,6 @@ def root():
 @app.get("/health")
 def health():
     return {"status": "healthy", "supabase": "connected"}
-
-from pydantic import BaseModel
 
 class SignupRequest(BaseModel):
     name: str
@@ -72,7 +72,6 @@ async def login(request: LoginRequest):
             "email": request.email,
             "password": request.password
         })
-        # hint: supabase.auth.sign_in_with_password()
         
         # Step 2: Get the user_id from the response
         user_id = auth_response.user.id
@@ -83,5 +82,41 @@ async def login(request: LoginRequest):
         # Step 4: Return session token + user data
         return {"access_token": auth_response.session.access_token, "user": user_data.data[0]}
         
+    except Exception as e:
+        return {"error": str(e)}
+
+security = HTTPBearer()
+
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    token = credentials.credentials
+    try:
+        user = supabase.auth.get_user(token)
+        return user.user
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    
+class OnboardingRequest(BaseModel):
+    communication_style: str
+    financial_situation: str
+    nudge_preference: str
+
+@app.put("/user/onboarding")
+async def complete_onboarding(request: OnboardingRequest, current_user = Depends(get_current_user)):
+    try:
+        # Step 1: Get user_id from current_user
+        user_id = current_user.id
+        
+        # Step 2: Update the users table
+        supabase.table("users").update({
+            "communication_style": request.communication_style,
+            "financial_situation": request.financial_situation,
+            "nudge_preference": request.nudge_preference,
+            "onboarding_complete": True
+        }).eq("id", user_id).execute()
+       
+        
+        # Step 3: Return success message
+        return {"message": "Onboarding completed"}
+    
     except Exception as e:
         return {"error": str(e)}
