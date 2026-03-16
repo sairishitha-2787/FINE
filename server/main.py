@@ -59,3 +59,29 @@ async def signup(request: SignupRequest):
     
     except Exception as e:
         return {"error": str(e)}
+    
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+@app.post("/auth/login")
+async def login(request: LoginRequest):
+    try:
+        # Step 1: Sign in with Supabase
+        auth_response = supabase.auth.sign_in_with_password({
+            "email": request.email,
+            "password": request.password
+        })
+        # hint: supabase.auth.sign_in_with_password()
+        
+        # Step 2: Get the user_id from the response
+        user_id = auth_response.user.id
+        
+        # Step 3: Fetch user data from users table
+        user_data = supabase.table("users").select("*").eq("id", user_id).execute()
+        
+        # Step 4: Return session token + user data
+        return {"access_token": auth_response.session.access_token, "user": user_data.data[0]}
+        
+    except Exception as e:
+        return {"error": str(e)}
