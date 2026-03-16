@@ -1,5 +1,15 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from supabase import create_client, Client
+from dotenv import load_dotenv
+import os
+
+load_dotenv(os.path.join(os.path.dirname(__file__), '.env'))
+
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 app = FastAPI(title="FINE API", version="2.0.0")
 
@@ -17,5 +27,4 @@ def root():
 
 @app.get("/health")
 def health():
-    return {"status": "healthy"}
-
+    return {"status": "healthy", "supabase": "connected"}
