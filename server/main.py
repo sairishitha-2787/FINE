@@ -153,3 +153,18 @@ async def log_transaction(request: TransactionRequest, current_user = Depends(ge
     
     except Exception as e:
         return {"error": str(e)}
+    
+@app.get("/transactions")
+async def get_transactions(current_user = Depends(get_current_user)):
+    try:
+        # Step 1: Get user_id
+        user_id = current_user.id
+
+        # Step 2: Fetch all transactions for this user
+        transactions = supabase.table("transactions").select("*").eq("user_id", user_id).order("date_time", desc=True).execute()
+        
+        # Step 3: Return the transactions
+        return {"transactions": transactions.data}
+        
+    except Exception as e:
+        return {"error": str(e)}
