@@ -418,7 +418,8 @@ export default function DashboardScreen() {
 
     api.getTransactions()
       .then(data => {
-        if (Array.isArray(data) && data.length > 0) setHasTransactions(true)
+        const list = data?.transactions
+        if (Array.isArray(list) && list.length > 0) setHasTransactions(true)
       })
       .catch(() => {})
       .finally(() => setLoading(false))
