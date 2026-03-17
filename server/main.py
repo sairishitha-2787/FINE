@@ -120,3 +120,36 @@ async def complete_onboarding(request: OnboardingRequest, current_user = Depends
     
     except Exception as e:
         return {"error": str(e)}
+    
+class TransactionRequest(BaseModel):
+    amount: float
+    category: str
+    mood: str
+    note: str = None  # optional field with default None
+    date_time: str = None  # optional, defaults to now
+
+@app.post("/transactions")
+async def log_transaction(request: TransactionRequest, current_user = Depends(get_current_user)):
+    try:
+        # Step 1: Get user_id from current_user
+        user_id = current_user.id
+        # Step 2: Build transaction data
+        transaction_data = {
+            "user_id": user_id,
+            "amount": request.amount,
+            "category": request.category,
+            "mood": request.mood
+        }
+        if request.note is not None:
+            transaction_data["note"] = request.note
+        if request.date_time is not None:
+            transaction_data["date_time"] = request.date_time
+
+        # Step 3: Insert into transactions table
+        supabase.table("transactions").insert(transaction_data).execute()
+        
+        # Step 4: Return the created transaction
+        return {"message": "Transaction logged"}
+    
+    except Exception as e:
+        return {"error": str(e)}
