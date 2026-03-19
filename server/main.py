@@ -168,3 +168,48 @@ async def get_transactions(current_user = Depends(get_current_user)):
         
     except Exception as e:
         return {"error": str(e)}
+
+class NudgeCheckRequest(BaseModel):
+    mood: str
+    category: str
+
+@app.post("/nudge/check")
+async def check_nudge(request: NudgeCheckRequest, current_user = Depends(get_current_user)):
+    try:
+        # Step 1: Define discretionary categories
+        discretionary_categories = [
+            "Food & Dining", "Shopping", "Entertainment",
+            "Personal Care", "Gifts", "Other", "Groceries"
+        ]
+
+        # Step 2: Extract values and check if category is discretionary
+        category = request.category
+        mood = request.mood
+        user_id = current_user.id
+
+        if category not in discretionary_categories:
+            return {"should_nudge": False}
+
+        # Step 3: Fetch user's past transactions for this mood + category
+        transactions = supabase.table("transactions").select("*").eq("user_id", user_id).eq("category", category).eq("mood", mood).execute()
+
+        # Step 4: If less than 2 matches — return {"should_nudge": False}
+        if len(transactions.data) < 2:
+            return {"should_nudge": False}
+
+        # Step 5: Calculate average amount and count
+        total_amount = sum(t["amount"] for t in transactions.data)
+        average_amount = total_amount / len(transactions.data)
+        count = len(transactions.data)
+
+        # Step 6: Return nudge data
+        return {
+            "should_nudge": True,
+            "count": count,
+            "average_amount": round(average_amount, 2),
+            "mood": mood,
+            "category": category
+        }
+
+    except Exception as e:
+        return {"error": str(e)}
