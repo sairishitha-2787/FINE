@@ -51,4 +51,14 @@ export const api = {
       },
       body: JSON.stringify(data)
     }).then(handleResponse),
+
+  checkNudge: (mood, category) =>
+    fetch(`${API_URL}/nudge/check`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getToken()}`
+      },
+      body: JSON.stringify({ mood, category })
+    }).then(handleResponse),
 }

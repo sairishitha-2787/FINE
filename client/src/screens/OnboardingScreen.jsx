@@ -191,7 +191,11 @@ export default function OnboardingScreen() {
       })
       if (res && !res.detail) {
         const user = JSON.parse(localStorage.getItem('user') || '{}')
-        localStorage.setItem('user', JSON.stringify({ ...user, onboarding_complete: true }))
+        localStorage.setItem('user', JSON.stringify({
+          ...user,
+          onboarding_complete: true,
+          nudge_preference: answers.nudge_preference,
+        }))
         navigate('/dashboard')
       } else {
         setError(res?.detail || 'Something went wrong.')

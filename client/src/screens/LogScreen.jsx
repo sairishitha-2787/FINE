@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { api } from '../api/client'
 
 const CATEGORIES = [
@@ -178,6 +178,8 @@ export default function LogScreen() {
   const [loading,   setLoading]   = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
   const [error,     setError]     = useState('')
+  const [showNudge,  setShowNudge]  = useState(false)
+  const [nudgeData,  setNudgeData]  = useState(null)
 
   const canSubmit = amount !== '' && category !== '' && mood !== ''
 
@@ -194,6 +196,19 @@ export default function LogScreen() {
         date_time: new Date(dateTime).toISOString(),
         ...(note ? { note } : {}),
       }
+
+      const user = JSON.parse(localStorage.getItem('user'))
+      const nudgePref = user?.nudge_preference
+      if (nudgePref === 'Nudge me in the moment') {
+        const nudgeResult = await api.checkNudge(mood, category)
+        if (nudgeResult?.should_nudge) {
+          setNudgeData(nudgeResult)
+          setShowNudge(true)
+          setLoading(false)
+          return
+        }
+      }
+
       const res = await api.logTransaction(transactionData)
       if (res?.message === 'Transaction logged') {
         setShowSuccess(true)
@@ -205,6 +220,32 @@ export default function LogScreen() {
       setError('Something went wrong. Please try again.')
     }
     setLoading(false)
+  }
+
+  const handleProceedAnyway = async () => {
+    setShowNudge(false)
+    setLoading(true)
+    try {
+      const result = await api.logTransaction({
+        amount: parseFloat(amount),
+        category,
+        mood,
+        note: note || undefined,
+        date_time: new Date(dateTime).toISOString()
+      })
+      if (result?.message === 'Transaction logged') {
+        setShowSuccess(true)
+        setTimeout(() => navigate('/dashboard'), 3000)
+      }
+    } catch (e) {
+      setError('Something went wrong.')
+    }
+    setLoading(false)
+  }
+
+  const handleReconsider = () => {
+    setShowNudge(false)
+    setNudgeData(null)
   }
 
   return (
@@ -355,6 +396,140 @@ export default function LogScreen() {
           </form>
         )}
       </div>
+
+      <AnimatePresence>
+        {showNudge && nudgeData && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              style={{
+                position: 'fixed', inset: 0,
+                background: 'rgba(13, 0, 21, 0.8)',
+                backdropFilter: 'blur(4px)',
+                zIndex: 40
+              }}
+            />
+
+            <motion.div
+              initial={{ y: '100%' }}
+              animate={{ y: '40%' }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              style={{
+                position: 'fixed', bottom: 0, left: 0, right: 0,
+                height: '65%',
+                background: '#1a1633',
+                borderTop: '1px solid #a89bc440',
+                borderRadius: '24px 24px 0 0',
+                zIndex: 50,
+                padding: '0 32px 32px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center'
+              }}
+            >
+              <div style={{
+                width: 40, height: 4,
+                background: '#a89bc440',
+                borderRadius: 2,
+                margin: '16px auto 24px'
+              }} />
+
+              <p style={{
+                fontFamily: "'Press Start 2P'",
+                fontSize: 8,
+                color: '#ea6890',
+                letterSpacing: '0.1em',
+                marginBottom: 16
+              }}>SPENDING PATTERN DETECTED</p>
+
+              <motion.div
+                animate={{ scale: [1, 1.1, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
+                style={{
+                  fontSize: 40,
+                  fontFamily: "'Press Start 2P'",
+                  color: '#ea6890',
+                  marginBottom: 16,
+                  filter: 'drop-shadow(0 0 12px #ea689080)'
+                }}
+              >
+                {nudgeData.mood === 'Stressed' ? '⚡' :
+                 nudgeData.mood === 'Happy' ? '★' :
+                 nudgeData.mood === 'Calm' ? '☽' :
+                 nudgeData.mood === 'Anxious' ? '!' :
+                 nudgeData.mood === 'Sad' ? '▼' : '◆'}
+              </motion.div>
+
+              <motion.p
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                style={{
+                  fontFamily: 'Inter',
+                  fontSize: 16,
+                  color: '#efe3ff',
+                  textAlign: 'center',
+                  lineHeight: 1.8,
+                  marginBottom: 8,
+                  maxWidth: 400
+                }}
+              >
+                The last <span style={{ color: '#ea6890', fontWeight: 600 }}>{nudgeData.count} times</span> you felt{' '}
+                <span style={{ color: '#ea6890', fontWeight: 600 }}>{nudgeData.mood}</span>, you spent on{' '}
+                <span style={{ color: '#a89bc4', fontWeight: 600 }}>{nudgeData.category}</span> — averaging{' '}
+                <span style={{ color: '#ea6890', fontWeight: 600 }}>₹{nudgeData.average_amount}</span> per transaction.
+              </motion.p>
+
+              <p style={{
+                fontFamily: 'Inter',
+                fontSize: 13,
+                color: '#a89bc470',
+                fontStyle: 'italic',
+                textAlign: 'center',
+                marginBottom: 32
+              }}>
+                Just something to reflect on. 🌙
+              </p>
+
+              <div style={{ display: 'flex', gap: 12, width: '100%', maxWidth: 400 }}>
+                <button
+                  onClick={handleReconsider}
+                  style={{
+                    flex: 1, padding: '14px',
+                    background: 'transparent',
+                    border: '1px solid #a89bc440',
+                    borderRadius: 4,
+                    color: '#a89bc4',
+                    fontFamily: "'Press Start 2P'",
+                    fontSize: 8,
+                    cursor: 'pointer'
+                  }}
+                >
+                  ← RECONSIDER
+                </button>
+                <button
+                  onClick={handleProceedAnyway}
+                  style={{
+                    flex: 1, padding: '14px',
+                    background: 'linear-gradient(135deg, #ea6890, #a89bc4)',
+                    border: 'none',
+                    borderRadius: 4,
+                    color: 'white',
+                    fontFamily: "'Press Start 2P'",
+                    fontSize: 8,
+                    cursor: 'pointer'
+                  }}
+                >
+                  LOG ANYWAY →
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
