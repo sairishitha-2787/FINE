@@ -7,7 +7,7 @@ import DashboardScreen from './screens/DashboardScreen'
 import LogScreen from './screens/LogScreen'
 import TransactionsScreen from './screens/TransactionsScreen'
 import PatternsScreen from './screens/PatternsScreen'
-import ReportScreen from './screens/ReportScreen'
+import WeeklyReportScreen from './screens/WeeklyReportScreen'
 import SettingsScreen from './screens/SettingsScreen'
 
 function ProtectedRoute({ children }) {
@@ -32,7 +32,7 @@ function App() {
         <Route path="/log"           element={<ProtectedRoute><LogScreen /></ProtectedRoute>} />
         <Route path="/transactions"  element={<ProtectedRoute><TransactionsScreen /></ProtectedRoute>} />
         <Route path="/patterns"      element={<ProtectedRoute><PatternsScreen /></ProtectedRoute>} />
-        <Route path="/report"        element={<ProtectedRoute><ReportScreen /></ProtectedRoute>} />
+        <Route path="/weekly-report"  element={<ProtectedRoute><WeeklyReportScreen /></ProtectedRoute>} />
         <Route path="/settings"      element={<ProtectedRoute><SettingsScreen /></ProtectedRoute>} />
       </Routes>
     </BrowserRouter>

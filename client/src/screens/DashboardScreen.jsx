@@ -60,7 +60,7 @@ function Sidebar({ open, onClose, user, navigate }) {
   const navItems = [
     { label: 'Past Transactions', icon: '◈', path: '/transactions' },
     { label: 'My Patterns',       icon: '◎', path: '/patterns'     },
-    { label: 'Weekly Report',     icon: '◻', path: '/report'       },
+    { label: 'Weekly Report',     icon: '◻', path: '/weekly-report' },
   ]
 
   const handleSignOut = () => {
@@ -328,7 +328,7 @@ function EmptyState({ user, navigate }) {
 const NAV_CARDS = [
   { title: 'PAST TRANSACTIONS', body: 'View your spending history',      path: '/transactions' },
   { title: 'MY PATTERNS',       body: 'See your emotional spending',     path: '/patterns'     },
-  { title: 'WEEKLY REPORT',     body: "This week's summary",             path: '/report'       },
+  { title: 'WEEKLY REPORT',     body: "This week's summary",             path: '/weekly-report' },
   { title: 'LOG TRANSACTION',   body: 'Record a new spend',              path: '/log'          },
 ]
 
